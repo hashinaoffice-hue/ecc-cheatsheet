@@ -1,9 +1,12 @@
 import { atom, read, update } from 'claude-code'
 import type { Register } from 'claude-code'
 
-import type { Tab } from '../types'
+import type { EngineInterface } from 'claude-code'
+
+import type { PetMsg, PetPos, Tab } from '../types'
 import { ALL_COUNT, CATEGORIES, FAV_COUNT } from './commands'
 import type { Category, Command } from './commands'
+import { PET_H, PET_KEY, PET_W, START_POS, clampPos, isPos } from './pet-art'
 
 const PANE = 'ecc-cheatsheet'
 const TITLE = 'ECC 명령어'
@@ -16,6 +19,29 @@ const collapsed = atom({ plugin: 'ecc-cheatsheet', key: 'collapsed' } as const, 
   shape: 'collapsed-1',
 })
 const copied = atom({ plugin: 'ecc-cheatsheet', key: 'copied' } as const, '', { shape: 'copied-1' })
+// 펫: 패널이 열렸는지, 펫이 어디 있는지 (위치는 다음 세션을 위해 저장소에도 저장)
+const isOpen = atom({ plugin: 'ecc-cheatsheet', key: 'isOpen' } as const, false, { shape: 'open-1' })
+const pos = atom({ plugin: 'ecc-cheatsheet', key: 'pos' } as const, START_POS as PetPos, { shape: 'pos-1' })
+const STORE_POS = 'petPos'
+
+/** 펫을 누를 때: 열려 있으면 접고, 접혀 있으면 펼침 */
+const toggle = async ($: EngineInterface) => {
+  if (await read($, isOpen)) {
+    await $.ui.close({ id: PANE })
+    await update($, isOpen, () => false)
+  } else {
+    await $.ui.open(open)
+    await update($, isOpen, () => true)
+  }
+}
+
+const asMsg = (data: unknown): PetMsg | undefined => {
+  if (typeof data !== 'object' || data === null) return undefined
+  const m = data as PetMsg
+  if (m.type === 'click') return m
+  if ((m.type === 'move' || m.type === 'drop') && isPos(m)) return m
+  return undefined
+}
 
 const matches = (c: Command, cat: Category, q: string) =>
   q === '' ||
@@ -27,17 +53,64 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'ecc-panel',
-      description: 'ECC 명령어 패널 열기',
+      description: 'ECC 명령어 패널 열기/닫기 (펫을 눌러도 돼요)',
     })
-    void $.ui.open(open)
+    // 시작할 땐 패널을 열지 않고 펫만 띄움. 지난번에 옮겨 둔 자리를 불러옴.
+    const saved = await $.store.get(STORE_POS)
+    if (isPos(saved)) await update($, pos, () => saved)
+    await update($, isOpen, () => false)
 
     return next(e)
   })
 
   on('command.run', { command: 'ecc-panel' }, async $ => {
-    await $.ui.open(open)
+    await toggle($)
 
-    return { text: 'ECC 명령어 패널을 열었어요.' }
+    return { text: (await read($, isOpen)) ? 'ECC 명령어 패널을 열었어요.' : 'ECC 명령어 패널을 접었어요.' }
+  })
+
+  // 패널의 ✕로 직접 닫아도 펫이 알아채도록
+  on('ui.close', { id: PANE }, async ($, e, next) => {
+    const done = await next(e)
+    await update($, isOpen, () => false)
+
+    return done
+  })
+
+  // 펫이 보내는 신호: 클릭 → 열기/닫기, 끌기 → 위치 이동, 놓기 → 위치 저장
+  on('ui.message', async ($, e, next) => {
+    if (e.element !== PET_KEY) return next(e)
+    const msg = asMsg(e.data)
+    if (msg === undefined) return {}
+    if (msg.type === 'click') {
+      await toggle($)
+    } else {
+      const where = { right: msg.right, bottom: msg.bottom }
+      await update($, pos, () => where)
+      if (msg.type === 'drop') await $.store.set(STORE_POS, where)
+    }
+
+    return {}
+  })
+
+  // 펫 그리기: 입력창 위 오른쪽 구석에 떠 있음
+  on('ui.render', { component: 'BesidePrompt' }, async ($, e, next) => {
+    if (e.surface !== 'terminal' && e.surface !== 'desktop') return next(e)
+    const { Box, Client } = $.ui.resolve(e)
+    const max = {
+      right: Math.max(0, e.props.floatColumns - PET_W),
+      bottom: Math.max(0, e.props.floatRows - PET_H),
+    }
+    const at = clampPos(await read($, pos), max)
+    const props = { pos: at, max, isOpen: await read($, isOpen), isWorking: e.props.isWorking }
+
+    return (
+      <Box>
+        <Box position="absolute" anchor="above" right={at.right} bottom={at.bottom}>
+          <Client key={PET_KEY} module="./pet.tsx" width={PET_W} height={PET_H} props={props} />
+        </Box>
+      </Box>
+    )
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
