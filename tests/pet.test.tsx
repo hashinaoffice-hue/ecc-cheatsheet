@@ -22,7 +22,7 @@ const click = async (ui: { pointer: (e: never) => Promise<void> }) => {
 test('펫이 데스크톱과 터미널에 그려진다', async $ => {
   for (const surface of ['desktop', 'terminal'] as const) {
     const ui = await $.ui.mount({ ...PET, surface })
-    expect(await ui.find({ type: 'Text', text: /▄██████▄/, in: 'ecc-pet' })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /██████/, in: 'ecc-pet' })).toBeDefined()
     await ui.unmount()
   }
 })
@@ -77,10 +77,10 @@ test('화면 밖으로는 못 나간다', async ($, on) => {
   mock.store(on)
   const ui = await $.ui.mount({ ...PET, surface: 'desktop' })
   await ui.pointer({ type: 'down', x: 5, y: 4, button: 'left' })
-  // 왼쪽 위로 아주 멀리 → 왼쪽 위 끝(가로 80-12, 세로 20-8)에서 멈춤
+  // 왼쪽 위로 아주 멀리 → 왼쪽 위 끝(가로 80-16, 세로 20-6)에서 멈춤
   await ui.pointer({ type: 'move', x: -500, y: -500, button: 'left' })
   await ui.pointer({ type: 'up', x: -500, y: -500, button: 'left' })
-  expect((await petProps(ui))?.pos).toEqual({ right: 68, bottom: 12 })
+  expect((await petProps(ui))?.pos).toEqual({ right: 64, bottom: 14 })
 
   // 오른쪽 아래로 아주 멀리 → 처음 구석(0, 0)에서 멈춤
   await ui.pointer({ type: 'down', x: 5, y: 4, button: 'left' })

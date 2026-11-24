@@ -1,6 +1,6 @@
 {
   "name": "ecc-cheatsheet",
-  "version": "0.2.0",
-  "description": "구석에 떠 있는 클로드풍 펫을 누르면 ECC 명령어 패널이 펼쳐지는 플로팅 모드 (검색·즐겨찾기·복사)",
+  "version": "0.2.1",
+  "description": "구석에 떠 있는 Claude Code 캐릭터 펫을 누르면 ECC 명령어 패널이 펼쳐지는 플로팅 모드 (검색·즐겨찾기·복사)",
   "types": "./types/index.d.ts"
 }
