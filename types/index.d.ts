@@ -1,16 +1,19 @@
 export type Tab = 'fav' | 'all'
 
-/** 펫 위치: 기준 자리(입력창 위 오른쪽 구석)에서 왼쪽으로 몇 칸, 위로 몇 줄 */
-export type PetPos = { right: number; bottom: number }
+/** 펫 모드: 클래식 = 동작만, 캐주얼 = 동작 + 머리 위 연출 */
+export type PetMode = 'classic' | 'casual'
 
 /** 펫 그림 부품(Client)이 받는 값 */
-export type PetProps = { pos: PetPos; max: PetPos; isOpen: boolean; isWorking: boolean }
+export type PetProps = {
+  isOpen: boolean
+  isWorking: boolean
+  /** 데스크톱은 색 상자로, 터미널은 반칸 블록 글자로 그림 */
+  surface: 'terminal' | 'desktop'
+  mode: PetMode
+}
 
-/** 펫 그림 부품이 보내는 신호 */
-export type PetMsg =
-  | { type: 'click' }
-  | { type: 'move'; right: number; bottom: number }
-  | { type: 'drop'; right: number; bottom: number }
+/** 펫 그림 부품이 보내는 신호: 눌렸어요 / 우클릭으로 모드를 바꿨어요 */
+export type PetMsg = { type: 'click' } | { type: 'mode'; mode: PetMode }
 
 declare module 'claude-code' {
   interface PluginState {
@@ -20,7 +23,7 @@ declare module 'claude-code' {
       collapsed: Shaped<string[]>
       copied: Shaped<string>
       isOpen: Shaped<boolean>
-      pos: Shaped<PetPos>
+      mode: Shaped<PetMode>
     }
   }
 }

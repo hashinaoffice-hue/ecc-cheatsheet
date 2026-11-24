@@ -1,10 +1,11 @@
 // ECC 명령어 목록. [명령어, 설명, 자주 쓰는 것이면 true]
+import type { IconName } from './icons'
 export type Command = { name: string; desc: string; star: boolean }
-export type Category = { id: string; icon: string; title: string; commands: Command[] }
+export type Category = { id: string; icon: IconName; title: string; commands: Command[] }
 
 type Row = [string, string, boolean?]
 
-const cat = (id: string, icon: string, title: string, rows: Row[]): Category => ({
+const cat = (id: string, icon: IconName, title: string, rows: Row[]): Category => ({
   id,
   icon,
   title,
@@ -12,7 +13,7 @@ const cat = (id: string, icon: string, title: string, rows: Row[]): Category => 
 })
 
 export const CATEGORIES: Category[] = [
-  cat('setup', '🚀', '시작·설정', [
+  cat('setup', 'sliders', '시작·설정', [
     ['ecc-guide', 'ECC 기능 안내서', true],
     ['project-init', '프로젝트에 ECC 설정 계획 세우기'],
     ['setup-pm', 'npm/pnpm/yarn/bun 선택'],
@@ -20,7 +21,7 @@ export const CATEGORIES: Category[] = [
     ['auto-update', 'ECC 최신 버전으로 업데이트'],
     ['aside', '작업 흐름 안 끊고 짧은 질문하기'],
   ]),
-  cat('plan', '🗺️', '계획 세우기', [
+  cat('plan', 'map', '계획 세우기', [
     ['plan', '요구사항·위험·단계별 계획 (확인 전엔 코드 안 건드림)', true],
     ['plan-prd', '간단한 기획서(PRD) 작성', true],
     ['prp-prd', '질문 주고받으며 기획서 작성', true],
@@ -28,7 +29,7 @@ export const CATEGORIES: Category[] = [
     ['plan-canvas', '브라우저에서 계획 보며 메모·승인'],
     ['model-route', '작업에 맞는 모델 추천'],
   ]),
-  cat('dev', '🛠️', '기능 개발', [
+  cat('dev', 'code', '기능 개발', [
     ['orch-add-feature', '새 기능 (조사→계획→테스트→구현→리뷰→커밋)', true],
     ['orch-fix-defect', '버그 재현 테스트 후 수정', true],
     ['orch-change-feature', '기존 기능 동작 변경', true],
@@ -38,11 +39,11 @@ export const CATEGORIES: Category[] = [
     ['prp-implement', '세운 계획을 검증하며 실행'],
     ['gan-build', '만들기↔평가 반복 구현 루프'],
   ]),
-  cat('design', '🎨', '디자인·UI', [
+  cat('design', 'pen', '디자인·UI', [
     ['ui-canvas', '브라우저에서 UI 시안 직접 편집 후 코드로', true],
     ['gan-design', '디자인 반복 개선 루프', true],
   ]),
-  cat('review', '🔍', '코드 리뷰', [
+  cat('review', 'eye', '코드 리뷰', [
     ['code-review', '바꾼 코드나 PR 리뷰', true],
     ['react-review', 'React 코드 전용 리뷰', true],
     ['review-pr', '여러 에이전트로 PR 종합 리뷰', true],
@@ -50,11 +51,11 @@ export const CATEGORIES: Category[] = [
     ['santa-loop', '리뷰어 둘 다 승인할 때까지 반복'],
     ['astra-review', 'GPT로 교차 리뷰 (Codex CLI 필요)'],
   ]),
-  cat('build', '🧱', '빌드 에러 해결', [
+  cat('build', 'wrench', '빌드 에러 해결', [
     ['build-fix', '빌드·타입 에러 최소 수정', true],
     ['react-build', 'React(Vite 등) 빌드 에러 수정', true],
   ]),
-  cat('test', '🧪', '테스트·점검·정리', [
+  cat('test', 'flask', '테스트·점검·정리', [
     ['react-test', 'React 테스트 먼저 작성(TDD)', true],
     ['test-coverage', '테스트 빠진 곳 보충', true],
     ['refactor-clean', '안 쓰는 코드 안전하게 삭제', true],
@@ -62,7 +63,7 @@ export const CATEGORIES: Category[] = [
     ['quality-gate', '파일 하나 포맷 검사'],
     ['harness-audit', '저장소 준비 상태 점수표'],
   ]),
-  cat('lang', '🌐', '언어·프레임워크별', [
+  cat('lang', 'globe', '언어·프레임워크별', [
     ['python-review', 'Python 코드 리뷰'],
     ['fastapi-review', 'FastAPI 코드 리뷰'],
     ['vue-review', 'Vue 코드 리뷰'],
@@ -83,14 +84,14 @@ export const CATEGORIES: Category[] = [
     ['cpp-review', 'C++ 코드 리뷰'],
     ['cpp-test', 'C++ 테스트(TDD)'],
   ]),
-  cat('marketing', '📣', '마케팅', [
+  cat('marketing', 'megaphone', '마케팅', [
     ['marketing-campaign', '포지셔닝·랜딩 문구·SNS·광고·영상 대본·일정 한 번에', true],
   ]),
-  cat('docs', '📄', '문서', [
+  cat('docs', 'file', '문서', [
     ['update-docs', '문서를 코드에 맞게 갱신', true],
     ['update-codemaps', '프로젝트 구조 지도 만들기', true],
   ]),
-  cat('session', '💾', '세션·비용', [
+  cat('session', 'clock', '세션·비용', [
     ['save-session', '작업 상태 저장', true],
     ['resume-session', '저장한 작업 이어하기', true],
     ['checkpoint', '체크포인트 만들기', true],
@@ -98,7 +99,7 @@ export const CATEGORIES: Category[] = [
     ['sessions', '세션 기록 관리'],
     ['token-card', '토큰 사용량 카드 만들기'],
   ]),
-  cat('git', '🌿', 'Git·GitHub·협업', [
+  cat('git', 'branch', 'Git·GitHub·협업', [
     ['prp-commit', '말로 설명해서 커밋', true],
     ['pr', 'GitHub PR 만들기', true],
     ['prp-pr', 'PR 만들기 (PRP 흐름용)'],
@@ -112,18 +113,18 @@ export const CATEGORIES: Category[] = [
     ['epic-unblock', '막힌 에픽 다시 열기'],
     ['epic-validate', '에픽 준비 상태 검사'],
   ]),
-  cat('multi', '🤝', '여러 모델 협업 (별도 런타임 필요)', [
+  cat('multi', 'users', '여러 모델 협업 (별도 런타임 필요)', [
     ['multi-plan', '여러 모델로 계획 세우기'],
     ['multi-backend', '백엔드 작업 여러 모델로'],
     ['multi-frontend', '프론트엔드 작업 여러 모델로'],
     ['multi-execute', '여러 모델 계획 실행'],
     ['multi-workflow', '조사→계획→실행→리뷰 전체 흐름'],
   ]),
-  cat('loop', '🔁', '자동 반복 루프', [
+  cat('loop', 'repeat', '자동 반복 루프', [
     ['loop-start', '자동 반복 작업 준비'],
     ['loop-status', '루프 상태 확인'],
   ]),
-  cat('learn', '🧠', '학습(instinct)', [
+  cat('learn', 'book', '학습(instinct)', [
     ['learn', '이번 작업에서 배운 패턴 저장'],
     ['learn-eval', '배운 패턴 평가 후 저장'],
     ['instinct-status', '학습 내용 보기'],
@@ -134,13 +135,13 @@ export const CATEGORIES: Category[] = [
     ['prune', '오래된 학습 정리'],
     ['projects', '프로젝트별 학습 보기'],
   ]),
-  cat('hook', '🪝', '훅(자동 규칙)', [
+  cat('hook', 'zap', '훅(자동 규칙)', [
     ['hookify', '하지 말아야 할 행동을 규칙으로 만들기'],
     ['hookify-configure', '규칙 켜기/끄기'],
     ['hookify-list', '규칙 목록'],
     ['hookify-help', '훅 도움말'],
   ]),
-  cat('skill', '🧩', '스킬 관리', [
+  cat('skill', 'layers', '스킬 관리', [
     ['skill-create', 'git 기록에서 스킬 만들기'],
     ['skill-health', '스킬 사용 현황 대시보드'],
     ['skill-host-compat', '스킬 호환성 검사'],

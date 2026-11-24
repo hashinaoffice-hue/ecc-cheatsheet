@@ -14,8 +14,15 @@ const PANE = {
   },
 } as const
 
-const has = async (ui: { find: (q: { type: 'Text'; text: RegExp }) => Promise<unknown> }, name: string) =>
-  (await ui.find({ type: 'Text', text: new RegExp(`^${name}$`) })) !== undefined
+type Ui = {
+  find: (q: { type: string; key?: string }) => Promise<unknown>
+  findAll: (q: { type: string }) => Promise<{ key: string | undefined }[]>
+}
+/** 명령어 줄이 보이는지 (줄마다 key가 row:/ecc:이름) */
+const has = async (ui: Ui, name: string) => (await ui.find({ type: 'Box', key: `row:${name}` })) !== undefined
+/** 복사 아이콘 버튼 개수 */
+const copyButtons = async (ui: Ui) =>
+  (await ui.findAll({ type: 'Button' })).filter(b => b.key?.startsWith('copy:')).length
 
 test('자주 쓰는 것 탭은 ⭐ 명령어만, 전체 탭은 99개 모두 보여준다', async ($, on) => {
   for (const surface of ['terminal', 'desktop', 'vscode', 'mobile'] as const) {
@@ -25,7 +32,7 @@ test('자주 쓰는 것 탭은 ⭐ 명령어만, 전체 탭은 99개 모두 보�
 
     await ui.press({ key: 'tab:all' })
     expect(await has(ui, '/ecc:go-test')).toBe(true)
-    expect(await ui.findAll({ type: 'Button', text: /^(복사|✓ 복사됨)$/ })).toHaveLength(99)
+    expect(await copyButtons(ui)).toBe(99)
 
     await ui.press({ key: 'tab:fav' })
     await ui.unmount()
@@ -37,12 +44,12 @@ test('검색하면 맞는 명령어만 남는다', async $ => {
   await ui.press({ key: 'tab:all' })
   await ui.input({ key: 'search', text: 'rust', kind: 'change' })
 
-  expect(await ui.findAll({ type: 'Button', text: /^복사$/ })).toHaveLength(3)
+  expect(await copyButtons(ui)).toBe(3)
   expect(await has(ui, '/ecc:rust-build')).toBe(true)
   expect(await has(ui, '/ecc:plan')).toBe(false)
 
   await ui.press({ key: 'clear' })
-  expect(await ui.findAll({ type: 'Button', text: /^복사$/ })).toHaveLength(99)
+  expect(await copyButtons(ui)).toBe(99)
   await ui.unmount()
 })
 
@@ -67,6 +74,9 @@ test('복사 버튼은 명령어를 클립보드에 넣는다', async ($, on) =>
   await ui.press({ key: 'copy:/ecc:plan' })
 
   expect(taken).toEqual(['/ecc:plan'])
-  expect((await ui.find({ type: 'Button', key: 'copy:/ecc:plan' }))?.text).toBe('✓ 복사됨')
+  const btn = await ui.find({ type: 'Button', key: 'copy:/ecc:plan' })
+  expect(JSON.stringify(btn)).toContain('✓') // 복사 아이콘이 체크로 바뀜
+  // 한글 '복사' 글자 버튼은 없음
+  expect(await ui.find({ type: 'Button', text: /복사/ })).toBeUndefined()
   await ui.unmount()
 })
