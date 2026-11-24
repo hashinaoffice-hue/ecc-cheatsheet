@@ -1,0 +1,6 @@
+{
+  "name": "ecc-cheatsheet",
+  "version": "0.1.0",
+  "description": "ECC 플러그인 명령어를 카테고리별로 보여주는 옆 패널 (검색·즐겨찾기·복사)",
+  "types": "./types/index.d.ts"
+}

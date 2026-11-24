@@ -1,0 +1,5 @@
+{
+  "name": "ecc-cheatsheet",
+  "owner": { "name": "hashinaoffice-hue" },
+  "plugins": [{ "name": "ecc-cheatsheet", "source": "./" }]
+}
