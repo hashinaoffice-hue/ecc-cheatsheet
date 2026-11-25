@@ -4,6 +4,10 @@
 /** 포인트 색: 클로드 주황(clay) / 보조 아이콘: 따뜻한 회색 — 밝은·어두운 테마 모두에서 보이는 중간 톤 */
 export const ACCENT = '#D97757'
 export const NEUTRAL = '#8C8A84'
+/** 카테고리 머리글 바: Anthropic의 따뜻한 갈색 (흰 글자·검은 글자 모두 읽히는 중간 톤) */
+export const BROWN = '#A9714B'
+/** 갈색 바 위의 아이콘·글자: 크림색 */
+export const CREAM = '#FBF3EA'
 
 const SHAPES = {
   // 패널 기본
