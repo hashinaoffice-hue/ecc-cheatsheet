@@ -10,6 +10,8 @@ export type PetProps = {
   /** 데스크톱은 색 상자로, 터미널은 반칸 블록 글자로 그림 */
   surface: 'terminal' | 'desktop'
   mode: PetMode
+  /** /ecc-pet 으로 다시 불러온 횟수 (1 이상이면 나타날 때 반짝) */
+  summon: number
 }
 
 /** 펫 그림 부품이 보내는 신호: 눌렸어요 / 우클릭으로 모드를 바꿨어요 */
@@ -24,6 +26,8 @@ declare module 'claude-code' {
       copied: Shaped<string>
       isOpen: Shaped<boolean>
       mode: Shaped<PetMode>
+      isPetHidden: Shaped<boolean>
+      summon: Shaped<number>
     }
   }
 }

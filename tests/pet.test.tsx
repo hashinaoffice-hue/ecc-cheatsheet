@@ -216,3 +216,48 @@ test('연출 그림: 작고 여러 색으로', () => {
   expect(all({ kind: 'sparkle', frame: 0 })).toContain('sWs')
   expect(all({ kind: 'none' })).toBe('.'.repeat(16 * 6))
 })
+
+/** 사람이 입력창에 /ecc-pet [args] 를 친 것처럼 */
+const cmd = (args: string) => ({
+  command: 'ecc-pet',
+  args,
+  origin: { kind: 'composer' as const },
+  presentation: { isFullscreen: false, columns: 100 },
+})
+
+test('/ecc-pet 숨기기 → 펫이 사라지고, /ecc-pet → 반짝이며 다시 나타난다 (설정 저장)', async ($, on) => {
+  const saved: unknown[] = []
+  on('store.set', (_, e) => {
+    saved.push([e.key, e.value])
+    return { value: undefined }
+  })
+  on('session.surfaces', () => ({ value: ['desktop'] }))
+
+  const hide = (await $.command.run(cmd('숨기기'))) as { text?: string }
+  expect(hide.text).toContain('숨겼어요')
+  let ui = await $.ui.mount({ ...PET, surface: 'desktop' })
+  expect(await ui.findAll({ type: 'Client' })).toHaveLength(0) // 펫 없음
+  await ui.unmount()
+
+  const show = (await $.command.run(cmd(''))) as { text?: string }
+  expect(show.text).toContain('다시 불렀어요')
+  ui = await $.ui.mount({ ...PET, surface: 'desktop' })
+  const pets = (await ui.findAll({ type: 'Client' })) as { key?: string; props: { props?: { summon?: number } } }[]
+  expect(pets).toHaveLength(1)
+  expect(pets[0]?.key).toBe('ecc-pet:1') // 새 이름으로 처음부터 다시 그림
+  expect(pets[0]?.props.props?.summon).toBe(1)
+  await ui.unmount()
+
+  expect(saved).toEqual([
+    ['petHidden', true],
+    ['petHidden', false],
+  ])
+})
+
+test('/ecc-pet: 펫을 그릴 수 없는 화면이면 이유와 /ecc-panel 을 안내한다', async ($, on) => {
+  mock.store(on)
+  on('session.surfaces', () => ({ value: ['mobile'] }))
+  const res = (await $.command.run(cmd(''))) as { text?: string }
+  expect(res.text).toContain('펫을 그릴 수 없는 곳')
+  expect(res.text).toContain('/ecc-panel')
+})

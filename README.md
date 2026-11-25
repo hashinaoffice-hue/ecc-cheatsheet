@@ -47,6 +47,8 @@ claude plugin install ecc-cheatsheet --marketplace hashinaoffice-hue/ecc-cheatsh
 
 세션이 시작되면 입력창 위 오른쪽 구석에 펫이 붙어 나타나요. 펫을 눌러 패널을 열고 닫으세요.
 
+펫이 안 보이면 `/ecc-pet` 을 입력하면 다시 불러와요. `/ecc-pet 숨기기` 로 숨길 수도 있어요(다음 세션에도 유지).
+
 펫은 **데스크톱 앱의 Code 탭**과 **터미널의 전체화면 모드**에서 보여요.
 펫이 안 보이는 화면(모바일, VS Code 등)에서는 `/ecc-panel`을 입력하면 패널이 열리고 닫혀요.
 

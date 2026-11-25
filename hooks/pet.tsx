@@ -200,7 +200,8 @@ const Pet: ClientModule<PetProps, State> = (props, surface) => {
       propsMode: props.mode,
       cheerUntil: 0,
       heartUntil: 0,
-      sparkleUntil: 0,
+      // /ecc-pet 으로 다시 불러왔으면 반짝이며 등장 (약 2초)
+      sparkleUntil: props.summon > 0 ? SPARKLE_TICKS + 3 : 0,
     }
     s = { ref, key: '' }
     surface.every(TICK_MS, () => tickOnce(surface))

@@ -47,6 +47,12 @@ const setMode = async ($: EngineInterface, next: PetMode) => {
   $.ui.toast(`펫: ${MODE_NAME[next]}`)
 }
 
+// 펫 숨김 (다음 세션에도 기억) · 다시 불러온 횟수 (바뀌면 펫을 새로 그림)
+const isPetHidden = atom({ plugin: 'ecc-cheatsheet', key: 'isPetHidden' } as const, false, { shape: 'hidden-1' })
+const summon = atom({ plugin: 'ecc-cheatsheet', key: 'summon' } as const, 0, { shape: 'summon-1' })
+const STORE_HIDDEN = 'petHidden'
+const HIDE_WORDS = ['숨기기', '숨김', '끄기', 'hide', 'off']
+
 const asMsg = (data: unknown): PetMsg | undefined => {
   if (typeof data !== 'object' || data === null) return undefined
   const m = data as PetMsg
@@ -89,8 +95,14 @@ export const register: Register = on => {
       name: 'ecc-pet-mode',
       description: '펫 모드 바꾸기: 클래식(동작만) ↔ 캐주얼(동작 + 연출). 펫을 우클릭해도 돼요',
     })
+    await $.command.register({
+      name: 'ecc-pet',
+      description: '펫 다시 불러오기 · "/ecc-pet 숨기기"로 숨기기',
+      argumentHint: '[숨기기]',
+    })
     const savedMode = await $.store.get(STORE_MODE)
     if (isMode(savedMode)) await update($, mode, () => savedMode)
+    if ((await $.store.get(STORE_HIDDEN)) === true) await update($, isPetHidden, () => true)
     // 시작할 땐 패널을 열지 않고 펫만 띄움
     await update($, isOpen, () => false)
 
@@ -110,6 +122,31 @@ export const register: Register = on => {
     return { text: `펫을 ${MODE_NAME[next]}로 바꿨어요.` }
   })
 
+  // /ecc-pet: 펫 다시 불러오기 (숨겼으면 다시 보이고, 떠 있어도 새로 그림) · /ecc-pet 숨기기
+  on('command.run', { command: 'ecc-pet' }, async ($, e) => {
+    if (HIDE_WORDS.includes((e.args ?? '').trim().toLowerCase())) {
+      await update($, isPetHidden, () => true)
+      await $.store.set(STORE_HIDDEN, true)
+
+      return { text: '펫을 숨겼어요. /ecc-pet 을 입력하면 다시 불러와요. 패널은 /ecc-panel 로 열 수 있어요.' }
+    }
+    await update($, isPetHidden, () => false)
+    await $.store.set(STORE_HIDDEN, false)
+    await update($, summon, n => n + 1)
+
+    // 펫은 데스크톱 앱 Code 탭과 터미널(전체화면)에서만 그려짐
+    const surfaces = await $.session.surfaces()
+    if (!surfaces.some(s => s === 'desktop' || s === 'terminal')) {
+      return {
+        text:
+          '펫을 다시 불렀지만, 지금 보고 있는 화면은 펫을 그릴 수 없는 곳이에요 ' +
+          '(펫은 데스크톱 앱 Code 탭과 터미널 전체화면에서 보여요). 명령어 패널은 /ecc-panel 로 열 수 있어요.',
+      }
+    }
+
+    return { text: '펫을 다시 불렀어요! 입력창 위 오른쪽 구석을 보세요.' }
+  })
+
   // 패널의 ✕로 직접 닫아도 펫이 알아채도록
   on('ui.close', { id: PANE }, async ($, e, next) => {
     const done = await next(e)
@@ -120,7 +157,8 @@ export const register: Register = on => {
 
   // 펫이 눌리면 패널 열기/닫기, 우클릭하면 모드 바꾸기
   on('ui.message', async ($, e, next) => {
-    if (e.element !== PET_KEY) return next(e)
+    // 펫 부품 이름은 'ecc-pet:불러온 횟수' (다시 불러오면 이름이 바뀌어 새로 그려짐)
+    if (!e.element.startsWith(PET_KEY)) return next(e)
     const msg = asMsg(e.data)
     if (msg?.type === 'click') await toggle($)
     else if (msg?.type === 'mode') await setMode($, msg.mode)
@@ -131,19 +169,29 @@ export const register: Register = on => {
   // 펫 그리기: 입력창 위 오른쪽 구석에 딱 붙어 떠 있음 (여백 없음)
   on('ui.render', { component: 'BesidePrompt' }, async ($, e, next) => {
     if (e.surface !== 'terminal' && e.surface !== 'desktop') return next(e)
+    if (await read($, isPetHidden)) return next(e) // /ecc-pet 숨기기 로 숨겨 둔 상태
     const { Box, Client } = $.ui.resolve(e)
     const size = petSize(e.surface)
+    const n = await read($, summon)
     const props = {
       isOpen: await read($, isOpen),
       isWorking: e.props.isWorking,
       surface: e.surface,
       mode: await read($, mode),
+      summon: n,
     }
 
     return (
       <Box>
         <Box position="absolute" anchor="above" right={INSET[e.surface]} bottom={0}>
-          <Client key={PET_KEY} module="./pet.tsx" width={size.w} height={size.h} props={props} />
+          {/* 다시 불러올 때마다 이름(key)이 바뀌어 펫이 처음부터 새로 그려짐 */}
+          <Client
+            key={n === 0 ? PET_KEY : `${PET_KEY}:${n}`}
+            module="./pet.tsx"
+            width={size.w}
+            height={size.h}
+            props={props}
+          />
         </Box>
       </Box>
     )
